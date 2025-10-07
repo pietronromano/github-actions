@@ -11,6 +11,9 @@ npm install
 # Run the app
 node nodeapi <inmemory|cosmos|sql>
 
+# Github debug
+gh variable set ACTIONS_STEP_DEBUG --body false|true
+
 ###############################################################
 
 # How to start from scratch Create a project
