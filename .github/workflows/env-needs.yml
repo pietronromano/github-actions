@@ -2,8 +2,8 @@
 name: Environments and "needs" conditions
 on:
   push:
-    branches: 
-      - main
+  #  branches: 
+  #    - main
   workflow_dispatch:
 
 jobs:
