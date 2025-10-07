@@ -1,5 +1,5 @@
 # A first workflow to play around with the editor
-name: Testing environments and "needs" conditions
+name: Environments and "needs" conditions
 on:
   push:
     branches: 
@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          echo "Hello ${{ vars.WHO_TO_GREET }} 👋 from ${{ github.actor }}." 
+          echo "Hello ${{ vars.MY_VAR }} 👋 from ${{ github.actor }}." 
           echo "My secret is 🤫 ${{ secrets.MY_SECRET }}."
           echo "Current branch is '${{ github.ref }}'."
       - name: Checkout
@@ -28,7 +28,7 @@ jobs:
         echo "Hello ${{ vars.MY_VAR }} 👋 from ${{ github.actor }}." 
         sec=$(echo ${{ secrets.MY_SECRET }} | sed 's/./& /g')
         echo "My secret is 🤫 '$sec'."
-      
+     
   Load-Test:
     runs-on: ubuntu-latest
     environment: Load-Test

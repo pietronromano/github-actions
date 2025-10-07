@@ -1,5 +1,5 @@
 # This is a basic workflow to help you get started with Actions
-name: CI
+name: Basic workflow
 
 # Controls when the workflow will run
 on:
@@ -41,3 +41,17 @@ jobs:
      # Show the files in the repo in a tree structure
       - name: Show tree
         run: tree
+
+  logs:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    steps:
+      # To see the debug message in action, we can rerun the workflow job with debug logging enabled. 
+      # In the workflow summary, click Re-run jobs | Re-run all jobs, select Enable debug logging, and click Re-run jobs (as shown in Figure 2.21):
+      - run: |
+          echo "::debug::This is a debug message."
+          echo "::notice::This is a notice message."
+          echo "::warning::This is a warning message."
+          echo "::error::This is an error message."
+
+          
