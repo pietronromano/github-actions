@@ -21,7 +21,7 @@ jobs:
 
   Test:
     runs-on: ubuntu-latest
-    environment: Test
+    environment: Test # shows in VS Code as not valid, but works fine in GitHub
     needs: first_job
     steps:
     - run: |
@@ -40,6 +40,7 @@ jobs:
         echo "My secret is 🤫 '$sec'."
         sleep 15
       
+  # This step will halt until we review, as we add in the Github UI an Environment Protection Rule requiring Review
   Production:
     runs-on: ubuntu-latest
     environment: 
