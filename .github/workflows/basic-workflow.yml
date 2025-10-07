@@ -43,7 +43,7 @@ jobs:
         run: tree
 
   # Output the entire context
-  info:
+  context:
     runs-on: ubuntu-latest
     steps:
       - name: Output GitHub context
