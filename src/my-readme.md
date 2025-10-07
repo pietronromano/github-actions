@@ -5,6 +5,7 @@
 ###############################################################
 
 # How to reuse: Regenerate the node_modules folder according to dependencies in package.json 
+cd src
 npm install
 
 # Run the app
