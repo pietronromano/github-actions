@@ -32,7 +32,9 @@ jobs:
       - name: Run a multi-line script
         run: |
           echo "Current branch is ${{ github.ref }}."
-          echo "GITHUB_TOKEN:  ${{ secrets.GITHUB_TOKEN }}" 
+          echo "secrets.GITHUB_TOKEN:  ${{ secrets.GITHUB_TOKEN }}" 
+          echo "secrets.MY_SECRET:  ${{ secrets.MY_SECRET }}" 
+          echo "vars.MY_VAR:  ${{ vars.MY_VAR }}"
           echo Add other actions to build,
           echo test, and deploy your project.
 
