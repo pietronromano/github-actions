@@ -11,7 +11,7 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/nodeapi/nodeapi.js",
+            "program": "${workspaceFolder}/nodeapi.js",
             "args": ["inmemory"],
             "outFiles": []
         }
