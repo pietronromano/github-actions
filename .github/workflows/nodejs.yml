@@ -20,7 +20,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v5
-    - run: cd src
+    # - run: cd src
     - name: Use Node.js ${{ matrix.node-version }}
       # https://github.com/marketplace/actions/setup-node-js-environment
       uses: actions/setup-node@v5
