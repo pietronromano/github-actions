@@ -9,6 +9,7 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    # DIDN'T WORK!!! -> supplied src later in npm calls
     # defaults:
     # run:
     #     working-directory: src # move to where the source is
@@ -27,6 +28,6 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
         cache-dependency-path: src/package-lock.json
-    - run: npm ci ./src
-    - run: npm run build --if-present ./src
+    - run: npm ci ./src # run from src folder
+    - run: npm run build --if-present ./src # run from src folder
     - run: npm --prefix src test # run script from /src folder
