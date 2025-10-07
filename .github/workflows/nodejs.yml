@@ -9,9 +9,9 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: src # move to where the source is
+    # defaults:
+    # run:
+    #     working-directory: src # move to where the source is
 
     strategy:
       matrix:
@@ -20,6 +20,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v5
+    - run: cd src
     - name: Use Node.js ${{ matrix.node-version }}
       # https://github.com/marketplace/actions/setup-node-js-environment
       uses: actions/setup-node@v5
