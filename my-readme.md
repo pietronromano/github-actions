@@ -44,6 +44,5 @@ Add VC code configuration for node
 
 # Set startup file in .vscode\launch.json (in root directory, above nodeapi)
 # This works on Mac.. suppose backslash would be needed for Windows
-"program": "${workspaceFolder}/nodeapi/cosmos.js",
-            "args": ["myarg2"],
+
 

@@ -1,5 +1,5 @@
-# A first workflow to play around with the editor
-name: Environments and "needs" conditions
+# Github Environments and "needs" conditions
+name: Environments/Needs
 on:
   push:
   #  branches: 
