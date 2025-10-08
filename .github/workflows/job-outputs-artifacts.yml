@@ -1,4 +1,7 @@
-# Example: https://docs.github.com/en/actions/tutorials/store-and-share-data
+# Sources: 
+#  - https://docs.github.com/en/actions/tutorials/store-and-share-data
+#  - https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows#using-outputs-from-a-reusable-workflow
+
 name: Job Outputs & Artifacts
 
 on: [workflow_dispatch]
@@ -14,7 +17,7 @@ jobs:
         run: |
           expr 3 + 7 > math-homework.txt
       - run: |
-          echo "test_output='an output value'" >> $GITHUB_OUTPUT
+          echo "test_output=an output value" >> $GITHUB_OUTPUT
       
       - name: Upload math result for job 1
         uses: actions/upload-artifact@v4
