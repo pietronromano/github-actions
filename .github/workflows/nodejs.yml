@@ -30,4 +30,4 @@ jobs:
         cache-dependency-path: src/package-lock.json
     - run: npm ci ./src # run from src folder
     - run: npm run build --if-present ./src # run from src folder
-    - run: npm --prefix src test # run script from /src folder
+    - run: npm --prefix src test # run test script from /src folder
