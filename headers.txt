@@ -1,0 +1,7 @@
+Ocp-Apim-Subscription-Key: I provided it later in a separate email
+API-Auth: I provided it later in a separate email
+Content-Type: application/json
+User-Agent: PostmanRuntime/7.48.0
+Cache-Control: no-cache
+Host: apipos.tst.pluxee.it
+Content-Length: 789
