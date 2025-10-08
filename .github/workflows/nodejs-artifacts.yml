@@ -78,6 +78,15 @@ jobs:
       matrix:
         node-version: ${{ fromJSON(needs.define-matrix.outputs.node_versions) }}
     steps:
+      - uses: actions/checkout@v5
+      - name: Use Node.js ${{ matrix.node-version }}
+        # https://github.com/marketplace/actions/setup-node-js-environment
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: src/package-lock.json
+        
       - name: Download build artifacts
         uses: actions/download-artifact@v5 # https://github.com/actions/download-artifact
         with:
