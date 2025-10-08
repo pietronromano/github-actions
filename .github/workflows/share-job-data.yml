@@ -1,7 +1,7 @@
 # Example: https://docs.github.com/en/actions/tutorials/store-and-share-data
 name: Share Job Data
 
-on: [push]
+on: [workflow_dispatch]
 
 jobs:
   job_1:
