@@ -17,7 +17,7 @@ jobs:
         run: |
           expr 3 + 7 > math-homework.txt
       - run: |
-          echo "test_output=an output value" >> $GITHUB_OUTPUT
+          echo "test_output=an_output_value" >> $GITHUB_OUTPUT
       
       - name: Upload math result for job 1
         uses: actions/upload-artifact@v4
