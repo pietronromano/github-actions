@@ -1,4 +1,4 @@
-name: Handles issue events
+name: Issue events handler
 on: issues
 jobs:
   output-info:
@@ -6,3 +6,4 @@ jobs:
     steps:
       - name: Output event details
         run: echo "{{ toJSON(github.event) }}"
+      
