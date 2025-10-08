@@ -11,11 +11,13 @@ jobs:
     name: Add 3 and 7
     runs-on: ubuntu-latest
     outputs:
-      test_output:
+      test_output: job_1 output value
     steps:
       - shell: bash
         run: |
           expr 3 + 7 > math-homework.txt
+
+
       - run: |
           echo "test_output=an_output_value" >> $GITHUB_OUTPUT
       
@@ -30,6 +32,7 @@ jobs:
     needs: job_1
     runs-on: windows-latest
     steps:
+      # NOTE: DIDN'T WORK, NO VALUE FOUND
       - run: |
           echo "Obtained previous output:${{ needs.job_1.outputs.test_output}}" 
       
