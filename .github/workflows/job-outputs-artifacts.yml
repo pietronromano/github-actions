@@ -1,5 +1,5 @@
 # Example: https://docs.github.com/en/actions/tutorials/store-and-share-data
-name: Share Job Data
+name: Job Outputs & Artifacts
 
 on: [workflow_dispatch]
 
