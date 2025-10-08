@@ -8,12 +8,12 @@ jobs:
     name: Add 3 and 7
     runs-on: ubuntu-latest
     outputs:
-      expr_result:
+      test_output:
     steps:
       - shell: bash
         run: |
           expr 3 + 7 > math-homework.txt
-          expr 3 + 7 > expr_result >> $GITHUB_OUTPUT
+          echo "test_output='an output value" >> $GITHUB_OUTPUT
       - name: Upload math result for job 1
         uses: actions/upload-artifact@v4
         with:
@@ -25,7 +25,9 @@ jobs:
     needs: job_1
     runs-on: windows-latest
     steps:
-      - run: echo  ${{ needs.job_1.outputs.expr_result}}
+      - run: |
+          echo "Obtained previous output:${{ needs.job_1.outputs.test_output}}" 
+      
       - name: Download math result for job 1
         uses: actions/download-artifact@v5
         with:
