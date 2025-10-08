@@ -7,7 +7,6 @@ on: [workflow_dispatch]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     # DIDN'T WORK!!! -> supplied src later in npm calls
     # defaults:
@@ -31,3 +30,19 @@ jobs:
     - run: npm ci ./src # run from src folder
     - run: npm run build --if-present ./src # run from src folder
     - run: npm --prefix src test # run test script from /src folder
+    
+    - name: Upload artifacts # demo on how to upload artifacts
+      uses: actions/upload-artifact@v4 # https://github.com/actions/upload-artifact
+      with:
+        name: deploy-files
+        path: |
+          src
+          node_modules
+          package.json 
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy
+        run: echo "Deployed... "
