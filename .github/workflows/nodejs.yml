@@ -6,6 +6,7 @@ name: Nodejs Artifacts
 on: [workflow_dispatch]
 
 jobs:
+  ## https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
   define-matrix:
     runs-on: ubuntu-latest
     outputs:
@@ -27,8 +28,10 @@ jobs:
     strategy:
       matrix:
         node-version: ${{ fromJSON(needs.define-matrix.outputs.node_versions) }}
-     #   node-version: [18.x, 20.x, 22.x, 24.x]
-     #   # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+     
+    # Matrix just for this job
+     #  node-version: [18.x, 20.x, 22.x, 24.x]
+     #  See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
     - uses: actions/checkout@v5
@@ -64,6 +67,6 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v5 # https://github.com/actions/download-artifact
         with:
-          name: "download-files-${{ matrix.node-version }}" # need to create a unique name in each run
+          name: "deploy-files-${{ matrix.node-version }}" # need to create a unique name in each run
 
       - run: echo "Deployed... ${{ matrix.node-version }}"
