@@ -1,7 +1,7 @@
 # Github Environments and "needs" conditions
 name: Environments/Needs
 on:
-  push:
+  # push:
   #  branches: 
   #    - main
   workflow_dispatch:
