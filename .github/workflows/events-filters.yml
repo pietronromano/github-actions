@@ -1,5 +1,5 @@
 # Examples of events, activity types & filters
-name: Basic workflow
+name: Events & Filters
 
 # Controls when the workflow will run
 on:
