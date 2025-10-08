@@ -69,5 +69,7 @@ jobs:
         uses: actions/download-artifact@v5 # https://github.com/actions/download-artifact
         with:
           name: "deploy-files-${{ matrix.node-version }}" # use the same names generated in build
-
+      
+      - name: List output contents
+        run: ls
       - run: echo "Deployed... ${{ matrix.node-version }}"
