@@ -42,11 +42,12 @@ jobs:
       - name: Show tree
         run: tree
 
-  # Output the entire context
+  # Output the entire context: see https://docs.github.com/en/actions/reference/workflows-and-actions/contexts
   context:
     runs-on: ubuntu-latest
     steps:
       - name: Output GitHub context
+        # https://docs.github.com/en/actions/reference/workflows-and-actions/expressions
         run: echo "${{ toJSON(github) }}"
   
   logs:
