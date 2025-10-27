@@ -1,0 +1,53 @@
+# Basic Deployment, (No Remote State)
+# Prerequisites: Deploy using Azure OIDC credentials: SEE my-readme-oidc.azcli
+name: Terraform Basic Deployment 
+
+on:
+  # push:
+  #   branches: [ main ]
+  #   paths:
+  #   - 'terraform/**'
+  # pull_request:
+  #   branches: [ main ]
+  #   paths:
+  #   - 'terraform/**'
+  workflow_dispatch:
+
+permissions:
+      id-token: write
+      contents: read
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    environment:
+      name: Development # Secrets must be stored in this Environment in Github
+    defaults:
+      run:
+        working-directory: ./modules/aca-basic
+    steps:
+      # Check out the repo
+      - uses: actions/checkout@v5.0.0
+
+      # Login to Azure
+      - uses: azure/login@v2.3.0
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3.1.2
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        run: terraform plan
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+
+      - name: logout
+        run: |
+          az logout

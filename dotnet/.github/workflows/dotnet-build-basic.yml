@@ -1,0 +1,42 @@
+# Callable workflow, Build .Net App,  no caching
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: dotnet-build-basic
+
+on:
+  # push:
+  #   branches: [ "main" ]
+  # pull_request:
+  #   branches: [ "main" ]
+  # Allows running this workflow manually from the Actions tab
+  workflow_dispatch:
+  # Allows workflow to be called by other workflows
+  workflow_call:
+    inputs:
+      DOTNET_VERSION:
+        description: DotNet Version to use
+        required: false
+        default: 9.0.x
+        type: string
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: DotNetHttpServer
+
+    steps:
+    - uses: actions/checkout@v5
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: ${{ inputs.DOTNET_VERSION }}
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore
+    - name: Test
+      run: dotnet test --no-build --verbosity normal

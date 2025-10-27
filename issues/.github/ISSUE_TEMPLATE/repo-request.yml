@@ -1,0 +1,30 @@
+name: '🗒️ Repository Request' 
+description: 'Request a new repository.'
+title: '🗒️ Repository Request: '
+labels: 
+  - 'repo-request'
+  - 'issue-ops'
+projects: 'repo-requests/1' #id
+assignees: 
+  - pietronromano
+body:
+  - type: input
+    id: name
+    attributes:
+      label: 'Name'
+      description: 'Name of the repository in lower-case and kebab casing.'
+      placeholder: 'github-actions-issues'
+    validations:
+      required: true
+  - type: dropdown
+    id: department
+    attributes:
+      label: 'Department'
+      description: 'Pick your department. It will be used as a prefix for the repository name.'
+      multiple: false
+      options:
+        - dep1
+        - dep2
+      default: 0
+    validations:
+      required: true

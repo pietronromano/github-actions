@@ -1,0 +1,120 @@
+# Deploy webapp with OpenID Connect
+- DATE 21-October-2025
+- WORKFLOW: webapp-oidc.yml
+- ORIGINAL SOURCE: https://learn.microsoft.com/en-us/azure/app-service/deploy-github-actions?tabs=openid%2Caspnetcore#generate-deployment-credentials
+- RESULTS: WORKED FINE
+
+# NOTE: Application Objects & Service Principals
+## An application object is used as a template or blueprint to create one or more service principal objects. 
+## The service principal (which is a security principal) defines what the app can actually do in a specific target directory, who can use it, what resources it has access to, and so on. 
+# If you register an application in the portal, an application object as well as a service principal object are automatically created in your home tenant. 
+# If you register/create an application using the Microsoft Graph APIs, creating the service principal object is a separate step.
+############################################################################################
+
+# Variables
+entra_app=github-actions-webapp
+subscriptionId=8f45e7ec-...
+tenantId=599fd2f6-...
+rg=rg-github-actions
+location=northeurope
+web_app=pnrghactionswebapp1
+
+# Login to tenant 
+az login --tenant pietronromanolive.onmicrosoft.com 
+
+# Set a specific Subscription
+az account set -s <ID>
+
+# Create the Resource group if it doesn't exist
+az group create --location $location --resource-group $rg
+
+#1. Register a new Microsoft Entra application and service principal that can access resources
+az ad app create --display-name $entra_app
+
+## This command returns a JSON output with an appId that is your client-id. 
+- "appId": "a3f7040e-...",
+##  Save the value to use as the AZURE_CLIENT_ID GitHub secret later.#
+##  NOTE: You use the objectId value when you create federated credentials with Graph API and reference it as the APPLICATION-OBJECT-ID.
+- "id": "d4b417cf-...",
+
+## NOTE: To see new Entra Application in Portal: Entra ID -> App  Registrations -> All Applications
+- https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/RegisteredApps
+
+#2. Create a service principal. Replace the --id with the appId from your JSON output.
+## This command generates a JSON output with a different objectId to use in the next step. 
+## The new objectId is the assignee-object-id.
+## Copy the appOwnerOrgnizationId to later use as a GitHub secret for AZURE_TENANT_ID.
+
+az ad sp create --id a3f7040e-...
+- "id": "6654a2de-...",
+- "appOwnerOrganizationId": "599fd2f6-...",
+
+## NOTE: the appId is shown in the output as follows
+ - "appId": "a3f7040e-...",
+ - "servicePrincipalNames": [ "a3f7040e-..."],
+
+#3. Create a new role assignment by subscription and object. By default, the role assignment is tied to your default subscription
+## NOTE: assigneeObjectId is the sp "id" returned from "az ad sp create "
+assigneeObjectId=6654a2de-...
+
+az role assignment create \
+    --role contributor \
+    --subscription $subscriptionId \
+    --assignee-object-id  $assigneeObjectId \
+    --scope /subscriptions/$subscriptionId/resourceGroups/$rg/providers/Microsoft.Web/sites/$web_app \
+    --assignee-principal-type ServicePrincipal
+
+## Output  
+    {
+    ...
+    "id": "/subscriptions/8f45e7ec.../resourceGroups/rg-github-actions/providers/Microsoft.Web/sites/pnrghactionswebapp1/providers/Microsoft.Authorization/roleAssignments/481a2482-c0cb-44d5-8ea8-a5e2f41a2a65",
+    "name": "481a2482-...",
+    "principalId": "6654a2de-...",
+    "principalType": "ServicePrincipal",
+    "resourceGroup": "rg-github-actions",
+    "roleDefinitionId": "/subscriptions/8f45e7ec-.../providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
+    "scope": "/subscriptions/8f45e7ec-..../resourceGroups/rg-github-actions/providers/Microsoft.Web/sites/pnrghactionswebapp1",
+    "type": "Microsoft.Authorization/roleAssignments",
+    ...
+    }
+
+#4.  Run the following command to create a new federated identity credential for your Microsoft Entra app.
+## Use the appId that you generated during app creation for your Active Directory application.
+## See local file credential.json for details of contents
+- Set a value for CREDENTIAL-NAME to reference later.
+- Set the subject. GitHub defines its value depending on your workflow:
+  - For jobs in your GitHub Actions environment, use: 
+    - repo:< Organization/Repository >:environment:< Name >
+    - repo:pietronromano/github-actions-dotnet:environment:Development
+
+appId=a3f7040e-...
+credential="credential-"$entra_app
+echo $credential
+
+az ad app federated-credential create --id $appId --parameters credential.json
+
+- Output
+    {
+    "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#applications('d4b417cf-a6d2-436e-b89b-a5c23e40f0e7')/federatedIdentityCredentials/$entity",
+    "audiences": [
+        "api://AzureADTokenExchange"
+    ],
+    "description": "Credential for Development Environment",
+    "id": "38d6b6fd-....",
+    "issuer": "https://token.actions.githubusercontent.com",
+    "name": "credcredential-github-actions-webapp",
+    "subject": "repo:pietronromano/github-actions-dotnet:environment:Development"
+    }
+
+# Set Secrets in Github Environment called "Development":
+ - AZURE_CLIENT_ID: Application (client) ID
+ - AZURE_TENANT_ID: Directory (tenant) ID
+ - AZURE_subscriptionId: Subscription ID 
+
+# Use GH CLI
+## SEE: https://cli.github.com/manual/gh
+gh auth login
+## Set secrets for current git remote repo
+gh secret set --env Development AZURE_CLIENT_ID --body $appId
+gh secret set --env Development AZURE_TENANT_ID --body $tenantId
+gh secret set --env Development AZURE_SUBSCRIPTION_ID --body $subscriptionId

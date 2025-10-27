@@ -1,0 +1,119 @@
+# Example of using a custom Composite Action
+
+name: Use Custom Action
+on:
+  # Allows running this workflow manually from the Actions tab
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
+jobs:
+  lint-with-custom-composite-action:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get code
+        uses: actions/checkout@v5
+
+        # Use the custom Composite Action
+      - name: Use the custom Composite Action to load & cache dependencies
+        id: cache-deps
+        uses: ./.github/actions/cached-deps # relative to project root folder, don't have to specify /action.yml
+        with:
+          caching: 'false'
+      - name: Output information
+        run: echo "Cache used? ${{ steps.cache-deps.outputs.used-cache }}"
+      - name: Lint code
+        run: npm run lint
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get code
+        uses: actions/checkout@v5
+      - name: Load & cache dependencies
+        uses: ./.github/actions/cached-deps
+      - name: Test code
+        id: run-tests
+        run: npm run test
+      - name: Upload test report
+        if: failure() && steps.run-tests.outcome == 'failure'
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: test-report
+          path: test.json
+  # Build job
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get code
+        uses: actions/checkout@v5
+      - name: Load & cache dependencies
+        uses: ./.github/actions/cached-deps
+      - name: Build website
+        run: npm run build
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: dist-files
+          path: dist
+  
+  #Deploy job
+  deploy-with-custom-javascript-action:
+    permissions:
+      id-token: write
+      contents: read
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get code
+        uses: actions/checkout@v5
+      - name: Get build artifacts
+        uses: actions/download-artifact@v5
+        with:
+          name: dist-files
+          path: ./dist
+      - name: Output contents
+        run: ls
+      - name: Deploy site with Custom Action deploy-s3-javascript
+        id: deploy
+        uses: ./.github/actions/deploy-s3-javascript
+        env: # Dummy keys added to this repo
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        with:
+          bucket: gha-security-hosting-demo
+          dist-folder: ./dist
+          bucket-region: us-east-2
+      - name: Output information
+        run: |
+          echo "Live URL: $ {{ steps.deploy.outputs.website-url }}"
+  # job
+  deploy-with-custom-docker-action:
+    permissions:
+      id-token: write
+      contents: read
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get code
+        uses: actions/checkout@v5
+      - name: Get build artifacts
+        uses: actions/download-artifact@v5
+        with:
+          name: dist-files
+          path: ./dist
+      - name: Output contents
+        run: ls
+      - name: Deploy site with Custom Action deploy-s3-docker
+        id: deploy
+        uses: ./.github/actions/deploy-s3-docker
+        env: # Dummy keys added to this repo
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        with:
+          bucket: gha-security-hosting-demo
+          dist-folder: ./dist
+          bucket-region: us-east-2
+      - name: Output information
+        run: |
+          echo "Live URL: $ {{ steps.deploy.outputs.website-url }}"

@@ -1,0 +1,122 @@
+# Configure OpenID Connect for Github Workflows
+- DATE 23-October-2025
+- ORIGINAL SOURCE: https://learn.microsoft.com/en-us/azure/app-service/deploy-github-actions?tabs=openid%2Caspnetcore#generate-deployment-credentials
+- RESULTS: WORKED FINE
+
+# NOTE: Application Objects & Service Principals
+## An application object is used as a template or blueprint to create one or more service principal objects. 
+## The service principal (which is a security principal) defines what the app can actually do in a specific target directory, who can use it, what resources it has access to, and so on. 
+# If you register an application in the portal, an application object as well as a service principal object are automatically created in your home tenant. 
+# If you register/create an application using the Microsoft Graph APIs, creating the service principal object is a separate step.
+############################################################################################
+
+# Variables
+entra_app=github-actions-terraform
+subscriptionId=8f45e7ec-8404-4723-aa20-fc58a7c4c120
+tenantId=599fd2f6-80be-4f0d-9b03-b3e74fdcf211
+location=northeurope
+rg=rg-github-actions-terraform
+
+# Login to tenant 
+az login --tenant pietronromanolive.onmicrosoft.com 
+
+# Set a specific Subscription
+az account set -s 8f45e7ec-8404-4723-aa20-fc58a7c4c120
+
+# Create the Resource group if it doesn't exist
+az group create --location $location --resource-group $rg
+
+#1. Register a new Microsoft Entra application and service principal that can access resources
+az ad app create --display-name $entra_app
+
+## This command returns a JSON output with an appId that is your client-id. 
+- "appId": "a3a8cb51-7eb4-47c6-8b1d-f0a5134d1be7",
+##  Save the value to use as the AZURE_CLIENT_ID GitHub secret later.#
+##  NOTE: You use the objectId value when you create federated credentials with Graph API and reference it as the APPLICATION-OBJECT-ID.
+- "id": "cea37de7-c966-4cfe-9827-2f5b3ad4130c",
+
+## NOTE: To see new Entra Application in Portal: Entra ID -> App  Registrations -> All Applications
+- https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/RegisteredApps
+
+#2. Create a service principal. Replace the --id with the appId from your JSON output.
+## This command generates a JSON output with a different objectId to use in the next step. 
+## The new objectId is the assignee-object-id.
+## Copy the appOwnerOrgnizationId to later use as a GitHub secret for AZURE_TENANT_ID.
+
+az ad sp create --id a3a8cb51-7eb4-47c6-8b1d-f0a5134d1be7
+- "id": "fb56c1a2-cd66-40dc-9937-36f8d1f2d15d",
+- "appOwnerOrganizationId": "599fd2f6-80be-4f0d-9b03-b3e74fdcf211",
+
+## NOTE: the appId is shown in the output as follows
+ - "appId": "a3a8cb51-7eb4-47c6-8b1d-f0a5134d1be7",
+ - "servicePrincipalNames": [ "a3a8cb51-7eb4-47c6-8b1d-f0a5134d1be7"],
+
+#3. Create a new role assignment by subscription and object. By default, the role assignment is tied to your default subscription
+## NOTE: assigneeObjectId is the sp id returned from "az ad sp create "
+assigneeObjectId=fb56c1a2-cd66-40dc-9937-36f8d1f2d15d
+
+## Create at subscription level, to allow creating the resource group in the Terraform
+az role assignment create \
+    --role contributor \
+    --subscription $subscriptionId \
+    --assignee-object-id  $assigneeObjectId \
+    --scope /subscriptions/$subscriptionId \
+    --assignee-principal-type ServicePrincipal
+
+## Output  
+    {
+    ...
+    "id": "/subscriptions/8f45e7ec-8404-4723-aa20-fc58a7c4c120/resourceGroups/rg-github-actions-terraform/providers/Microsoft.Authorization/roleAssignments/5b18a4f0-390c-402a-a386-f4cea3f40ad9",
+    "name": "5b18a4f0-390c-402a-a386-f4cea3f40ad9",
+    "principalId": "fb56c1a2-cd66-40dc-9937-36f8d1f2d15d",
+    "principalType": "ServicePrincipal",
+    "resourceGroup": "rg-github-actions-terraform",
+    "roleDefinitionId": "/subscriptions/8f45e7ec-8404-4723-aa20-fc58a7c4c120/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
+    "scope": "/subscriptions/8f45e7ec-8404-4723-aa20-fc58a7c4c120/resourceGroups/rg-github-actions-terraform",
+    "type": "Microsoft.Authorization/roleAssignments",
+    ...
+    }
+
+#4.  Run the following command to create a new federated identity credential for your Microsoft Entra app.
+## Use the appId that you generated during app creation for your Active Directory application.
+## See local file credential.json for details of contents
+- Set a value for CREDENTIAL-NAME to reference later.
+- Set the subject. GitHub defines its value depending on your workflow:
+  - For jobs in your GitHub Actions environment, use: 
+    - repo:< Organization/Repository >:environment:< Name >
+    - repo:pietronromano/github-actions-terraform:environment:Development
+
+appId=a3a8cb51-7eb4-47c6-8b1d-f0a5134d1be7
+credential="credential-"$entra_app
+echo $credential
+
+
+# az ad app federated-credential delete --federated-credential-id 65d65fa9-098b-4e87-a315-162289100c58 --id $appId
+
+az ad app federated-credential create --id $appId --parameters credential.json
+
+- Output
+    {
+        "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#applications('cea37de7-c966-4cfe-9827-2f5b3ad4130c')/federatedIdentityCredentials/$entity",
+        "audiences": [
+            "api://AzureADTokenExchange"
+        ],
+        "description": "Credential for Development Environment",
+        "id": "79c7cf8c-e189-40cd-aef0-984af7829014",
+        "issuer": "https://token.actions.githubusercontent.com",
+        "name": "credential-github-actions-terraform",
+        "subject": "repo:pietronromano/github-actions-terraform:environment:Development"
+    }
+
+# Set Secrets in Github Environment called "Development": these are referenced in terraform-basic.yml
+ - AZURE_CLIENT_ID: Application (client) ID
+ - AZURE_TENANT_ID: Directory (tenant) ID
+ - AZURE_subscriptionId: Subscription ID 
+
+## Use GH CLI, SEE: https://cli.github.com/manual/gh
+
+gh auth login
+## Set secrets for current git remote repo
+gh secret set --env Development AZURE_CLIENT_ID --body $appId
+gh secret set --env Development AZURE_TENANT_ID --body $tenantId
+gh secret set --env Development AZURE_SUBSCRIPTION_ID --body $subscriptionId

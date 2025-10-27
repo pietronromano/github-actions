@@ -1,0 +1,80 @@
+# Callable workflow, Build .Net App with Cache
+# See: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: dotnet-build-cache
+
+on:
+  # push:
+  #   branches: [ "main" ]
+  # pull_request:
+  #   branches: [ "main" ]
+  # Allows running this workflow manually from the Actions tab
+  workflow_dispatch:
+  # Allows workflow to be called by other workflows
+  workflow_call:
+  
+  # Inputs: need to be supplied by the calling workflow
+    inputs:
+      dotnet-version:
+        description: DotNet Version to use
+        required: false
+        default: 9.0.x
+        type: string
+      working-directory:
+        description: Folder where code is located
+        required: false
+        default: 9.0.x
+        type: string
+      app-name:
+        description: Download artifact from build job
+        required: false
+        default: app
+        type: string
+    # outputs:
+    #   result:
+    #     description: The result of the deployment operation
+    #     value: ${{ jobs.build.outputs.outcome }}
+    # secrets:
+      # some-secret:
+        # required: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: DotNetHttpServer
+    steps:
+      - uses: actions/checkout@v5
+
+      # The action has a built-in functionality for caching and restoring dependencies
+      # SEE: https://github.com/actions/setup-dotnet/tree/v5/?tab=readme-ov-file#caching-nuget-packages
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ inputs.dotnet-version }}
+      
+      # This is correct, but not used here as there are no nuget dependencies
+      # SEE: https://github.com/actions/cache/blob/v4.3.0/examples.md#c---nuget
+      - name: Set up dependency caching for faster builds
+        uses: actions/cache@v4.3.0
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Build with dotnet
+        run: dotnet build --configuration Release
+
+      # DOTNET_ROOT is set automatically by the action: /usr/share/dotnet
+      # Release -o is NOT compatible with VS .sln files (so we exclude this file from the repo)
+      - name: dotnet publish 
+        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/${{ inputs.app-name }}
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: ${{ inputs.app-name }}
+          path: ${{env.DOTNET_ROOT}}/${{ inputs.app-name }}
+

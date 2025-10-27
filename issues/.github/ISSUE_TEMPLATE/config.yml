@@ -1,0 +1,7 @@
+blank_issues_enabled: false
+contact_links:
+
+  - name: 👥 Discussions 
+    url:  https://github.com/pietronromano/discussions/new
+    about: Please use discussions for issues that are not a bug, enhancement or feature request.
+

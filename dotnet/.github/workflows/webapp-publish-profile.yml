@@ -1,0 +1,51 @@
+# Deploy webapp with Publish Profile
+# SEE: my-readme-webapp-publish-profile.md
+#########################################################################################
+
+name: webapp-publish-profile
+
+env:
+  AZURE_WEBAPP_NAME: pnrghactionswebapp1   # set this to the name of your [PRE-EXISTING] Azure Web App
+
+on:
+  # push:
+  #   branches: [ "main" ]
+  # Allows running this workflow manually from the Actions tab
+  workflow_dispatch:
+ 
+jobs:
+  call-dotnet-build-cache:
+    # Call the reusable workflow
+    uses: ./.github/workflows/dotnet-build-cache.yml
+
+    # NOTE: env variables CANNOT be passed to the called workflow, so have to use literals
+    # https://stackoverflow.com/questions/73305126/passing-environment-variables-as-inputs-to-a-reusable-workflow
+    # https://github.com/orgs/community/discussions/26671
+    with: 
+      dotnet-version: 9.0.x
+      working-directory: DotNetHttpServer
+      app-name: pnrghactionswebapp1
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: call-dotnet-build-cache
+    environment:
+      name: Development # Secrets must be stored in ths Environment in Github
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v5
+        with:
+          name: ${{ env.AZURE_WEBAPP_NAME }}
+
+      # SEE: https://github.com/Azure/webapps-deploy
+      - name: Deploy to Azure Web App
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2.2.17
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          # Download from Azure WebApp overview page
+          # In GitHub, save contents as Actions -> Development Environment ->Repository Secret with this name
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }} 
+          package: .

@@ -1,0 +1,48 @@
+# Build Docker Image on ACR and Deploy to Azure Container Apps
+# SEE: DotNetHttpServer/my-readme-aca.azcli
+#########################################################################################
+
+name: aca-acr
+
+on:
+    # [push]
+    workflow_dispatch:
+
+permissions:
+      id-token: write
+      contents: read
+
+env:
+  AZURE_ACA_NAME: dotnethttpserver    # Set this to your Container App's name
+  AZURE_ACR_NAME: pnraca    # Set this to your Container Registry name
+  AZURE_RESOURCE_GROUP: rg-github-actions
+  AZURE_LOCATION: northeurope
+  SRC_FOLDER: DotNetHttpServer
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: Development # Secrets must be stored in this Environment in Github
+    defaults:
+      run:
+        working-directory: DotNetHttpServer
+    steps:
+      # Check out the repo
+      - uses: actions/checkout@v5
+      - uses: azure/login@v2.3.0
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Build and deploy Container App
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          appSourcePath: ${{ github.workspace }}/${{ env.SRC_FOLDER }} 
+          location: ${{ env.AZURE_LOCATION }} 
+          acrName:  ${{ env.AZURE_ACR_NAME }} 
+          containerAppName: ${{ env.AZURE_ACA_NAME }}
+          resourceGroup: ${{ env.AZURE_RESOURCE_GROUP }}    
+      
+      - name: logout
+        run: |
+          az logout

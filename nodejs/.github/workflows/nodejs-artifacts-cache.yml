@@ -1,0 +1,110 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: Nodejs Artifacts & Cache
+
+on: [workflow_dispatch]
+
+jobs:
+  # Define a matrix to share between jobs
+  # https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
+  define-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      node_versions: ${{ steps.node_versions.outputs.node_versions }}
+
+    steps:
+      - name: Define Node Versions
+        id: node_versions
+        run: |
+          echo 'node_versions=["18.x", "20.x", "22.x", "24.x"]' >> "$GITHUB_OUTPUT"
+  build:
+    runs-on: ubuntu-latest
+    needs: define-matrix
+    # DIDN'T WORK!!! -> supplied src later in npm calls
+    # defaults:
+    # run:
+    #     working-directory: src # move to where the source is
+
+    strategy:
+      matrix:
+        node-version: ${{ fromJSON(needs.define-matrix.outputs.node_versions) }}
+     
+    # Matrix just for this job
+     #  node-version: [18.x, 20.x, 22.x, 24.x]
+     #  See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - uses: actions/checkout@v5
+    - name: Use Node.js ${{ matrix.node-version }}
+      # https://github.com/marketplace/actions/setup-node-js-environment
+      uses: actions/setup-node@v5
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: src/package-lock.json
+  
+    # https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching#comparing-artifacts-and-dependency-caching
+    # https://github.com/actions/cache/blob/main/examples.md#node---npm
+    - name: Cache Dependencies
+      id: cache-npm
+      uses: actions/cache@v4
+      with:
+        path: ~/.npm
+        key: -${{ hashFiles('src/package-lock.json') }}-${{ matrix.node-version }}
+
+    - name: Install Dependencies
+      run: npm ci ./src # run from src folder
+    - name: Build
+      run: npm run build --if-present ./src # run from src folder
+    - name: Test   
+      run: npm --prefix src test # run test script from /src folder
+    
+    - name: Upload artifacts # demo on how to upload artifacts
+      uses: actions/upload-artifact@v4 # https://github.com/actions/upload-artifact
+      with:
+        name: "deploy-files-${{ matrix.node-version }}" # need to create a unique name in each run
+        path: |
+          src
+          node_modules
+          package.json 
+
+  deploy:
+    needs:
+      - define-matrix
+      - build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ${{ fromJSON(needs.define-matrix.outputs.node_versions) }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Use Node.js ${{ matrix.node-version }}
+        # https://github.com/marketplace/actions/setup-node-js-environment
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: src/package-lock.json
+        
+      - name: Download build artifacts
+        uses: actions/download-artifact@v5 # https://github.com/actions/download-artifact
+        with:
+          name: "deploy-files-${{ matrix.node-version }}" # use the same names generated in build
+      
+      # Should use the previously cached dependencies
+      - name: Cache Dependencies
+        id: cache-npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: -${{ hashFiles('src/package-lock.json') }}-${{ matrix.node-version }}
+
+      - name: Install Dependencies
+        run: npm ci ./src # run from src folder
+      - name: Build
+        run: npm run build --if-present ./src # run from src folder
+
+      - name: List output contents
+        run: ls
+      - run: echo "Deployed... ${{ matrix.node-version }}"

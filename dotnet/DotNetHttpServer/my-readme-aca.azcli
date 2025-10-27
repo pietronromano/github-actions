@@ -1,0 +1,254 @@
+#######################################################
+# Build Docker Image on ACR and Deploy to Azure Container Apps
+# DATES: 22-October-2025,27-August-2025
+# SOURCE: 
+  - Dockerfile originally from https://github.com/Azure-Samples/containerapps-albumapi-csharp/blob/main/src/Dockerfile
+  - ACR access with managed identity and GitHub integration from: https://learn.microsoft.com/en-us/azure/container-apps/github-actions
+# RESULTS:WORKED FINE
+  - Much simpler to have this file in the source directory DotNetHttpServer, as Dockerfile assumes this
+
+
+###################################################################
+
+# My Azure Variables
+rg="rg-github-actions-terraform"
+location="northeurope"
+acr=pnracracatest
+app=dotnethttpserver
+tag=v1
+acr_repo=$acr.azurecr.io/$app:$tag
+target_port=8080
+aca_env="aca-env"
+vnet="vnet-aca"
+subnet_aca="subnet-aca"
+
+subscriptionId=8f45e7ec-8404-4723-aa20-fc58a7c4c120
+credential="credential-"$app
+
+# Docker
+container="cnt-"$app
+image="img-"$app
+
+###################################################################
+
+## build: --platform linux/x86_64 ... : force emulation when building on Mac
+cd DotNetHttpServer
+docker image build --platform linux/x86_64 -t $image -f Dockerfile .
+
+## run: -p <hostport>:<containerport>:
+docker container list 
+docker container run  --name $container -it -p 8080:8080 $image
+docker container rm -f $container
+
+## logs: follow logs as they're output
+docker container logs -f $container
+
+## test on the hostport
+http://localhost:8080/health
+http://localhost:8080/environment
+http://localhost:8080/variables
+http://localhost:8080/request
+
+###################################################################
+
+# Login to Azure
+az login --tenant pietronromanolive.onmicrosoft.com 
+
+# Azure Container Registry 
+
+## Create Resource Group
+az group create --name $rg --location $location
+
+## Create Container Registry
+az acr create -n $acr -g $rg --admin-enabled false --sku Standard
+az acr check-health --name $acr
+
+## Tag locally, then push to ACR as repo
+docker tag $image $acr_repo
+az acr login -n $acr -g $rg
+docker image push $acr_repo
+az acr repository list -n $acr  -o table
+
+az acr repository show-tags -n $acr --repository $app -o table
+
+###################################################################
+
+# Container Apps Environment
+    - Create with own vnet: SEE https://learn.microsoft.com/en-us/azure/container-apps/vnet-custom?tabs=bash&pivots=azure-cli
+
+## CLI extensions, provider register
+az extension add --name containerapp --upgrade --allow-preview true
+az provider register --namespace Microsoft.App
+az provider register --namespace Microsoft.OperationalInsights
+az provider register --namespace Microsoft.ContainerService
+    
+## Create the VNet and Subnet
+az network vnet create \
+    --resource-group $rg \
+    --name $vnet \
+    --location $location \
+    --address-prefix 10.0.0.0/16
+         
+az network vnet subnet create \
+    --resource-group $rg \
+    --vnet-name $vnet \
+    --name $subnet_aca \
+    --address-prefixes 10.0.1.0/24 \
+    --delegations Microsoft.App/environments
+        
+subnet_aca_id=$(az network vnet subnet show \
+    --resource-group $rg \
+    --vnet-name $vnet \
+    --name $subnet_aca \
+    --query "id" -o tsv | tr -d '[:space:]')
+
+echo $subnet_aca_id
+    
+## Create ContainerApps Env: 
+- internal-only false: allows access from anywhere (instead of just vnet)
+- internal-only true: just vnet access, but can still use debug console to curl
+az containerapp env create \
+    --name $aca_env \
+    --resource-group $rg \
+    --location $location \
+    --infrastructure-subnet-resource-id $subnet_aca_id \
+    --internal-only false
+
+##   Create the Container App
+- SEE: https://learn.microsoft.com/en-us/azure/container-apps/get-started?tabs=bash
+
+### Get the ACR login credentials
+acr_username=$(az acr credential show -n $acr -g $rg --query username --output tsv)
+echo $acr_username
+
+acr_pwd=$(az acr credential show -n $acr -g $rg --query 'passwords[0].value' --output tsv)
+echo $acr_pwd
+
+### Create the Container App
+- ingress "external": allows acces from VNET, "internal" only allows access from within the Environment
+az containerapp up \
+  --name $app \
+  --resource-group $rg \
+  --location $location \
+  --environment $aca_env \
+  --image $acr.azurecr.io/$app:$tag \
+  --registry-server $acr.azurecr.io \
+  --registry-username $acr_username \
+  --registry-password $acr_pwd \
+  --target-port $target_port \
+  --ingress external \
+  --query properties.configuration.ingress.fqdn
+
+### Get the fqdn and curl
+aca_fqdn=$(az containerapp show -n $app -g $rg \
+    --query 'properties.configuration.ingress.fqdn' \
+    --output tsv)
+
+curl "https://"$aca_fqdn"/request"
+
+### The up command returns the fully qualified domain name for the container app
+- NOTE: the container app can be accessed via http OR https://<>, (HTTP get redirected to HTTPS)
+- NOTE: Use the URL WITHOUT THE TARGET PORT (which is for the internal container port)
+
+# Managed identity
+## Get the full resource ID of the container registry.
+acr_id=$(az acr show --resource-group $rg --name $acr --query id --output tsv)
+echo $acr_id
+
+## Enable managed identity for the container app.
+az containerapp identity assign \
+  --name $app \
+  --resource-group $rg \
+  --system-assigned
+### Note the principal ID of the managed identity in the command output.
+- "principalId": "dffd0da2-1b5b-40c4-a8cb-387244c6b8d0",
+
+## Assign the AcrPull role for the Azure Container Registry to the container app's managed identity.
+az role assignment create \
+  --assignee dffd0da2-1b5b-40c4-a8cb-387244c6b8d0 \
+  --role AcrPull \
+  --scope $acr_id
+
+# Configure the container app to use the managed identity to pull images from the Azure Container Registry.
+az containerapp registry set \
+  --name $app \
+  --resource-group $rg \
+  --server $acr.azurecr.io \
+  --identity system
+
+# Set ACR to no longer allow admin user
+az acr update -n $acr -g $rg --admin-enabled false
+
+#######################################################
+
+# Configure secrets in your GitHub repository
+## The GitHub workflow requires a secret named AZURE_CREDENTIALS to authenticate with Azure. 
+## The secret contains the credentials for a service principal with the Contributor role on the resource group containing the container app and container registry.
+
+##  Create a service principal with the Contributor role on the resource group that contains the container app and container registry.
+### If your container registry is in a different resource group, specify both resource groups in the --scopes parameter.
+az ad sp create-for-rbac \
+  --name $app"-credentials" \
+  --role contributor \
+  --scopes /subscriptions/$subscriptionId/resourceGroups/$rg \
+  --json-auth \
+  --output json
+
+## Copy the JSON output from the command.
+
+## In the GitHub repository, navigate to Settings > Secrets > Actions and select New repository secret.
+- Enter AZURE_CREDENTIALS as the name and paste the contents of the JSON output as the value.
+- Select Add secret.
+
+## SEE workflows/aca-acr.yml for details of GitHub Actions
+
+#######################################################
+# Debugging
+### Stream Logs
+az containerapp logs show -n $app -g $rg
+
+### See full details
+az containerapp show -n $app -g $rg
+
+
+## Container Apps Console / Debug: allows connecting to live console
+ - NOTE: Can do this also from the "Console" item in the Portal, both for Console and Debug
+ - CONSOLE: https://learn.microsoft.com/en-us/azure/container-apps/container-console?tabs=bash
+   - Debian image (from dotnet)
+ - DEBUG: https://learn.microsoft.com/en-us/azure/container-apps/container-debug-console?tabs=bash
+   - separate container, utils installed, "Common Base Linux Mariner"
+
+az containerapp revision list \
+  --name $app \
+  --resource-group $rg \
+  --query "[].name"
+
+az containerapp replica list \
+  --name $app \
+  --resource-group $rg \
+  --revision $app"--0000002" \
+  --query "[].{Containers:properties.containers[].name, Name:name}"
+
+#### DEBUG in a separate container, with the most recent revision
+az containerapp debug \
+  --name $app \
+  --resource-group $rg
+
+#### Connect to the actual container, most recent revision
+az containerapp exec \
+  --name $app \
+  --resource-group $rg
+
+### Once inside the container: see app contents in this dir:
+cd /proc/1/cwd/ 
+
+### Check dotnet info/  runtime versions (only installed on Console)
+dotnet --info
+dotnet --list-runtimes
+
+### see proceses: (only installed on debug container) 
+ps
+
+### curl: (only installed on debug container)
+- NOTE: get the container IP from the results returned from a call to <fqdn>/request
+curl 100.100.200.146:8080/request 

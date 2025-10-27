@@ -1,0 +1,6 @@
+# Ignore private keys
+*.pem
+
+.env
+
+node_modules

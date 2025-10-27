@@ -1,0 +1,24 @@
+# Install dependencies
+npm install
+
+
+# Docker Commands
+docker build --platform linux/x86_64 -t mongoapp -f docker/Dockerfile .
+
+# NOTE: 
+    - image name MUST come LAST (after the env arguments)
+    - everything after the image name is sent as parameters to the entrypoint script. Which by default is /bin/sh -c
+    - https://stackoverflow.com/questions/50181031/passing-environment-variables-not-working-with-docker
+
+
+# Allow container to communicate with a service on the host
+    - SEE https://docs.docker.com/engine/network/drivers/host/
+    - Docker Desktop -> Navigate to Settings. -> Under the Resources tab, select Network. -> Check the Enable host networking option. -> Select Apply and restart.
+
+##  Run container, allow connection to host, remove when finished, env-file, and LAST: name of the image
+docker container run  --name mongoapp \
+    --net=host \
+    --rm \
+    --env-file docker/env.txt \
+    mongoapp
+
