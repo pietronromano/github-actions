@@ -1,0 +1,78 @@
+# DATE: 17-Oct-2025
+# SOURCE: p. 335 Kaufmann, Michael. GitHub Actions Cookbook: A practical guide to automating repetitive tasks and streamlining your development process
+
+# SEE ALSO my example for a how to create Credential with az CLI:
+# https://github.com/pietronromano/github-actions-dotnet/blob/main/my-readme-webapp-oidc.azcli
+
+# RESULTS:
+    - worked one day, then stopped working
+    - So created a new credential: credential-github-actions-azure-oidc -> it started working agooin
+
+
+# NOTE: Application Objects & Service Principals
+## An application object is used as a template or blueprint to create one or more service principal objects. 
+## The service principal (which is a security principal) defines what the app can actually do in a specific target directory, who can use it, what resources it has access to, and so on. 
+# If you register an application in the portal, an application object as well as a service principal object are automatically created in your home tenant. 
+# If you register/create an application using the Microsoft Graph APIs, creating the service principal object is a separate step.
+############################################################################################
+
+# Variables
+entra_app="github-actions-oidc"
+
+# Login to  my tenant avoiding work tenant 
+az login --tenant pietronromanolive.onmicrosoft.com 
+
+# Set a specific Subscription
+az account set -s 8f45e7ec-8404-4723-aa20-fc58a7c4c120
+
+# Create a new app registration
+az ad app create --display-name $entra_app
+- "appId": "3afe81a5-d873-4b01-a1d3-d72d0c24118c"
+
+# Create Service principle
+az ad sp create --id 3afe81a5-d873-4b01-a1d3-d72d0c24118c
+- "id": "bcc3ae4d-dca8-4d64-bca0-a40a46e4a647"
+- "servicePrincipalNames": [- "3afe81a5-d873-4b01-a1d3-d72d0c24118c" ],
+
+# To see new Entra Application in Portal: Entra ID -> App  Registrations -> All Applications
+- https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/RegisteredApps
+
+## Add the OIDC trust under Certificates & secrets | Federated credentials | Add credentials. 
+## Fill out the form. Set the organization to your GitHub username, enter the repository name, and pick Environment as the entity type (see Figure 7.1):
+ 
+ # My credential name: github-actions-oidc-azure
+ - Application (client) ID: 3afe81a5-d873-4b01-a1d3-d72d0c24118c
+ - Directory (tenant) ID: 599fd2f6-80be-4f0d-9b03-b3e74fdcf211
+ - Subscription ID: 8f45e7ec-8404-4723-aa20-fc58a7c4c120
+
+# Then, assign the service principle a role in your subscription. Open the subscription in the portal. 
+    - [Contributor is under "Privileged Administrator Roles"]
+# Under Access control (IAM) | Role assignment | Add | Add role assignment, follow the wizard. 
+# Select role—for example, Contributor—and click Next. 
+# Select User, group, or service principal, and select the service principle you created earlier.
+
+# Set Secrets in Github Production Environment:
+ - AZURE_CLIENT_ID
+ - AZURE_TENANT_ID
+ - AZURE_SUBSCRIPTION_ID 
+
+
+############################################################################################
+# Keyvault
+# SEE: https://learn.microsoft.com/en-us/azure/developer/github/github-actions-key-vault
+
+# Set Secret in Github Production Environment:
+ - KEYVAULT_NAME: pnrkeyvault1
+
+# NOTE: requires adding pietronromano#EXT... to Key Vault Secrets Officer
+az keyvault secret set --vault-name pnrkeyvault1 --name Secret1 --value 'A secret value'
+az keyvault secret show --vault-name pnrkeyvault1 --name Secret1 
+
+# List DIDN'T show the sp created earlier
+az ad sp list -o table
+# Using the id DID work, allows finding the name of the SP to add to Key Vault Secrets Users
+az ad sp show --id bcc3ae4d-dca8-4d64-bca0-a40a46e4a647
+
+
+# IMPORTANT: Add execute permissions to deploy.sh, then push
+sudo chmod +x deploy.sh

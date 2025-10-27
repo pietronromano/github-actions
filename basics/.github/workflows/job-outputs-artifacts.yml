@@ -1,0 +1,66 @@
+# Sources: 
+#  - https://docs.github.com/en/actions/tutorials/store-and-share-data
+#  - https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows#using-outputs-from-a-reusable-workflow
+
+name: Job Outputs & Artifacts
+
+on: [workflow_dispatch]
+
+jobs:
+  job_1:
+    name: Add 3 and 7
+    runs-on: ubuntu-latest
+    # Must set job outputs at this level, and set their value
+    outputs:
+      test_output: "job_1 output value"
+    steps:
+      - shell: bash
+        run: |
+          expr 3 + 7 > math-homework.txt
+
+
+      - run: |
+          echo "test_output=an_output_value" >> $GITHUB_OUTPUT
+      
+      - name: Upload math result for job 1
+        uses: actions/upload-artifact@v4
+        with:
+          name: homework_pre
+          path: math-homework.txt
+
+  job_2:
+    name: Multiply by 9
+    needs: job_1
+    runs-on: windows-latest
+    steps:
+      - run: |
+          echo "Obtained previous output:${{ needs.job_1.outputs.test_output}}" 
+      
+      - name: Download math result for job 1
+        uses: actions/download-artifact@v5
+        with:
+          name: homework_pre
+      - shell: bash
+        run: |
+          value=`cat math-homework.txt`
+          expr $value \* 9 > math-homework.txt
+      - name: Upload math result for job 2
+        uses: actions/upload-artifact@v4
+        with:
+          name: homework_final
+          path: math-homework.txt
+
+  job_3:
+    name: Display results
+    needs: job_2
+    runs-on: macOS-latest
+    steps:
+      - name: Download math result for job 2
+        uses: actions/download-artifact@v5
+        with:
+          name: homework_final
+      - name: Print the final result
+        shell: bash
+        run: |
+          value=`cat math-homework.txt`
+          echo The result is $value

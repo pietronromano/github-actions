@@ -1,0 +1,16 @@
+name: 'Docker Action Recipe'
+description: 'Inputs and Outputs'
+inputs:
+  input-1:
+    description: 'First input'
+    required: true
+    default: 'Default Input Value'
+outputs:
+  output-1:
+    description: 'First Output' 
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.input-1 }}

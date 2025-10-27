@@ -1,0 +1,22 @@
+name: 'Composite Action Recipe'
+description: 'Greets the user and returns 42.'
+
+inputs:
+  question:
+    description: 'What is the question?'
+    required: true
+    default: '?'
+outputs:
+  answer:
+    description: "Answer to life, the universe, and everything"
+    value: ${{ steps.deep-thought.outputs.answer }} 
+runs:
+  using: "composite"
+  steps:
+    - name: Awesome bash composite script action
+      id: deep-thought
+      shell: bash
+      run: |
+        echo "Hello '${{ inputs.who-to-greet }}'."
+        echo "answer=42" >> $GITHUB_OUTPUT
+        echo "So long, and thanks for all the fish."

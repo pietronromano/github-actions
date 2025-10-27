@@ -1,0 +1,24 @@
+name: Use Docker Action
+on: [push, workflow_dispatch]
+
+jobs:
+  docker-action-job:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Run my own container action
+        id: docker-action-step
+        uses: ./.github/actions/docker # relative to project root folder, don't have to specify /action.yml
+        with:
+          input-1: 'First input'
+
+      - name: Show output
+        run: echo "The output is... ${{ steps.docker-action-step.outputs.output-1 }} " 
+ 
+      - name: Set a new Environment Variable
+        id: set-var
+        run: |
+          echo "new_env_var=a new value" >> "$GITHUB_ENV"
+      - name: Show the new Environment Variable
+        run: |
+          echo "${{ env.new_env_var }}"
