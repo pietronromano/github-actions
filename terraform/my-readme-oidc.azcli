@@ -30,7 +30,7 @@ az group create --location $location --resource-group $rg
 az ad app create --display-name $entra_app
 
 ## This command returns a JSON output with an appId that is your client-id. 
-- "appId": "a3a8cb51-7eb4-47c6-8b1d-f0a5134d1be7",
+- "appId": "a3a8cb51-...",
 ##  Save the value to use as the AZURE_CLIENT_ID GitHub secret later.#
 ##  NOTE: You use the objectId value when you create federated credentials with Graph API and reference it as the APPLICATION-OBJECT-ID.
 - "id": "cea37de7-c966-4cfe-9827-2f5b3ad4130c",
@@ -43,17 +43,17 @@ az ad app create --display-name $entra_app
 ## The new objectId is the assignee-object-id.
 ## Copy the appOwnerOrgnizationId to later use as a GitHub secret for AZURE_TENANT_ID.
 
-az ad sp create --id a3a8cb51-7eb4-47c6-8b1d-f0a5134d1be7
-- "id": "fb56c1a2-cd66-40dc-9937-36f8d1f2d15d",
+az ad sp create --id a3a8cb51-...
+- "id": "fb56c1a2-...",
 - "appOwnerOrganizationId": "599fd2f6-...",
 
 ## NOTE: the appId is shown in the output as follows
- - "appId": "a3a8cb51-7eb4-47c6-8b1d-f0a5134d1be7",
- - "servicePrincipalNames": [ "a3a8cb51-7eb4-47c6-8b1d-f0a5134d1be7"],
+ - "appId": "a3a8cb51-...",
+ - "servicePrincipalNames": [ "a3a8cb51-..."],
 
 #3. Create a new role assignment by subscription and object. By default, the role assignment is tied to your default subscription
 ## NOTE: assigneeObjectId is the sp id returned from "az ad sp create "
-assigneeObjectId=fb56c1a2-cd66-40dc-9937-36f8d1f2d15d
+assigneeObjectId=fb56c1a2-...
 
 ## Create at subscription level, to allow creating the resource group in the Terraform
 az role assignment create \
@@ -68,7 +68,7 @@ az role assignment create \
     ...
     "id": "/subscriptions/8f45e7ec-.../resourceGroups/rg-github-actions-terraform/providers/Microsoft.Authorization/roleAssignments/5b18a4f0-390c-402a-a386-f4cea3f40ad9",
     "name": "5b18a4f0-390c-402a-a386-f4cea3f40ad9",
-    "principalId": "fb56c1a2-cd66-40dc-9937-36f8d1f2d15d",
+    "principalId": "fb56c1a2-...",
     "principalType": "ServicePrincipal",
     "resourceGroup": "rg-github-actions-terraform",
     "roleDefinitionId": "/subscriptions/8f45e7ec-.../providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
@@ -86,7 +86,7 @@ az role assignment create \
     - repo:< Organization/Repository >:environment:< Name >
     - repo:pietronromano/github-actions-terraform:environment:Development
 
-appId=a3a8cb51-7eb4-47c6-8b1d-f0a5134d1be7
+appId=a3a8cb51-...
 credential="credential-"$entra_app
 echo $credential
 
