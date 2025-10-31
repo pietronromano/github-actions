@@ -33,7 +33,7 @@ az ad app create --display-name $entra_app
 - "appId": "a3a8cb51-...",
 ##  Save the value to use as the AZURE_CLIENT_ID GitHub secret later.#
 ##  NOTE: You use the objectId value when you create federated credentials with Graph API and reference it as the APPLICATION-OBJECT-ID.
-- "id": "cea37de7-c966-4cfe-9827-2f5b3ad4130c",
+- "id": "cea37de7-...",
 
 ## NOTE: To see new Entra Application in Portal: Entra ID -> App  Registrations -> All Applications
 - https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/RegisteredApps
@@ -97,7 +97,7 @@ az ad app federated-credential create --id $appId --parameters credential.json
 
 - Output
     {
-        "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#applications('cea37de7-c966-4cfe-9827-2f5b3ad4130c')/federatedIdentityCredentials/$entity",
+        "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#applications('cea37de7-...')/federatedIdentityCredentials/$entity",
         "audiences": [
             "api://AzureADTokenExchange"
         ],
