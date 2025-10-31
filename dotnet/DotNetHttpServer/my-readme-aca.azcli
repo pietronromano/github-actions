@@ -22,7 +22,7 @@ aca_env="aca-env"
 vnet="vnet-aca"
 subnet_aca="subnet-aca"
 
-subscriptionId=8f45e7ec-8404-4723-aa20-fc58a7c4c120
+subscriptionId=8f45e7ec-...
 credential="credential-"$app
 
 # Docker
@@ -52,7 +52,7 @@ http://localhost:8080/request
 ###################################################################
 
 # Login to Azure
-az login --tenant pietronromanolive.onmicrosoft.com 
+az login --tenant mytenant.onmicrosoft.com 
 
 # Azure Container Registry 
 

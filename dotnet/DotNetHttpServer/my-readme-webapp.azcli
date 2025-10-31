@@ -16,8 +16,8 @@ dotnet run --urls=https://localhost:5001/
 CTRL+C
 
 # Deploy to Azure
-# Login to  my tenant (599fd2f6-80be-4f0d-9b03-b3e74fdcf211), avoiding work tenant 
-az login --tenant pietronromanolive.onmicrosoft.com
+# Login to  my tenant (599fd2f6-...), avoiding work tenant 
+az login --tenant mytenant.onmicrosoft.com
 
 az webapp up --sku S1 --name $appname --os-type $os --location $location --resource-group $rg
 # RESULTS:

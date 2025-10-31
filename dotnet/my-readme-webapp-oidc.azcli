@@ -20,7 +20,7 @@ location=northeurope
 web_app=pnrghactionswebapp1
 
 # Login to tenant 
-az login --tenant pietronromanolive.onmicrosoft.com 
+az login --tenant mytenant.onmicrosoft.com 
 
 # Set a specific Subscription
 az account set -s <ID>

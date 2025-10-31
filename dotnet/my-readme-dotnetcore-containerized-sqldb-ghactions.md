@@ -59,7 +59,7 @@ az ad app create --display-name $appName
   "publicClient": {
     "redirectUris": []
   },
-  "publisherDomain": "pietronromanolive.onmicrosoft.com",
+  "publisherDomain": "mytenant.onmicrosoft.com",
   "requestSignatureVerification": null,
   "requiredResourceAccess": [],
   "samlMetadataUrl": null,
@@ -110,7 +110,7 @@ az ad sp create --id $appId
   "appDescription": null,
   "appDisplayName": "MyAppDB",
   "appId": "a954cc20-1ebc-49b9-90ca-7b1c0cbcecab",
-  "appOwnerOrganizationId": "599fd2f6-80be-4f0d-9b03-b3e74fdcf211",
+  "appOwnerOrganizationId": "599fd2f6-...",
   "appRoleAssignmentRequired": false,
   "appRoles": [],
   "applicationTemplateId": null,
@@ -155,7 +155,7 @@ az ad sp create --id $appId
 }
 
 # Tenant ID
-appOwnerOrganizationId="599fd2f6-80be-4f0d-9b03-b3e74fdcf211"
+appOwnerOrganizationId="599fd2f6-..."
 echo $appOwnerOrganizationId
 
 spId="d463d911-7c42-44ae-b547-8978c01bd5fd"
@@ -220,7 +220,7 @@ RESULT:
 # Configure the GitHub secret for authentication
  - You need to provide your application's Client ID, Tenant ID, and Subscription ID to the login action.
     - AZURE_CLIENT_ID: a954cc20-1ebc-49b9-90ca-7b1c0cbcecab
-    - AZURE_TENANT_ID: 599fd2f6-80be-4f0d-9b03-b3e74fdcf211
+    - AZURE_TENANT_ID: 599fd2f6-...
     - AZURE_SUBSCRIPTION_ID: a2401ab8-bd17-453c-a13b-ae728a0271e9
 
 # Add a SQL Server secret

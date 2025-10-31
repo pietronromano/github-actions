@@ -5,10 +5,10 @@
 PS1='%1~ $ '
 
 # Login to Azure
-az login --tenant pietronromanolive.onmicrosoft.com 
+az login --tenant mytenant.onmicrosoft.com 
 	
 # Set a specific Subscription
-az account set -s 8f45e7ec-8404-4723-aa20-fc58a7c4c120
+az account set -s 8f45e7ec-...
 
 # CD into the target terraform folder
 

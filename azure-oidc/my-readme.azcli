@@ -19,20 +19,20 @@
 # Variables
 entra_app="github-actions-oidc"
 
-# Login to  my tenant avoiding work tenant 
-az login --tenant pietronromanolive.onmicrosoft.com 
+# Login to  my tenant 
+az login --tenant mytenant.onmicrosoft.com 
 
 # Set a specific Subscription
-az account set -s 8f45e7ec-8404-4723-aa20-fc58a7c4c120
+az account set -s 8f45e7ec-...
 
 # Create a new app registration
 az ad app create --display-name $entra_app
-- "appId": "3afe81a5-d873-4b01-a1d3-d72d0c24118c"
+- "appId": "3afe81a5-..."
 
 # Create Service principle
-az ad sp create --id 3afe81a5-d873-4b01-a1d3-d72d0c24118c
-- "id": "bcc3ae4d-dca8-4d64-bca0-a40a46e4a647"
-- "servicePrincipalNames": [- "3afe81a5-d873-4b01-a1d3-d72d0c24118c" ],
+az ad sp create --id 3afe81a5-...
+- "id": "bcc3ae4d-..."
+- "servicePrincipalNames": [- "3afe81a5-..." ],
 
 # To see new Entra Application in Portal: Entra ID -> App  Registrations -> All Applications
 - https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/RegisteredApps
@@ -41,9 +41,9 @@ az ad sp create --id 3afe81a5-d873-4b01-a1d3-d72d0c24118c
 ## Fill out the form. Set the organization to your GitHub username, enter the repository name, and pick Environment as the entity type (see Figure 7.1):
  
  # My credential name: github-actions-oidc-azure
- - Application (client) ID: 3afe81a5-d873-4b01-a1d3-d72d0c24118c
- - Directory (tenant) ID: 599fd2f6-80be-4f0d-9b03-b3e74fdcf211
- - Subscription ID: 8f45e7ec-8404-4723-aa20-fc58a7c4c120
+ - Application (client) ID: 3afe81a5-...
+ - Directory (tenant) ID: 599fd2f6-...
+ - Subscription ID: 8f45e7ec-...
 
 # Then, assign the service principle a role in your subscription. Open the subscription in the portal. 
     - [Contributor is under "Privileged Administrator Roles"]
@@ -71,7 +71,7 @@ az keyvault secret show --vault-name pnrkeyvault1 --name Secret1
 # List DIDN'T show the sp created earlier
 az ad sp list -o table
 # Using the id DID work, allows finding the name of the SP to add to Key Vault Secrets Users
-az ad sp show --id bcc3ae4d-dca8-4d64-bca0-a40a46e4a647
+az ad sp show --id bcc3ae4d-...
 
 
 # IMPORTANT: Add execute permissions to deploy.sh, then push

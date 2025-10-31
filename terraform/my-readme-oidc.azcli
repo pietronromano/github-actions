@@ -12,16 +12,16 @@
 
 # Variables
 entra_app=github-actions-terraform
-subscriptionId=8f45e7ec-8404-4723-aa20-fc58a7c4c120
-tenantId=599fd2f6-80be-4f0d-9b03-b3e74fdcf211
+subscriptionId=8f45e7ec-...
+tenantId=599fd2f6-...
 location=northeurope
 rg=rg-github-actions-terraform
 
 # Login to tenant 
-az login --tenant pietronromanolive.onmicrosoft.com 
+az login --tenant mytenant.onmicrosoft.com 
 
 # Set a specific Subscription
-az account set -s 8f45e7ec-8404-4723-aa20-fc58a7c4c120
+az account set -s 8f45e7ec-...
 
 # Create the Resource group if it doesn't exist
 az group create --location $location --resource-group $rg
@@ -45,7 +45,7 @@ az ad app create --display-name $entra_app
 
 az ad sp create --id a3a8cb51-7eb4-47c6-8b1d-f0a5134d1be7
 - "id": "fb56c1a2-cd66-40dc-9937-36f8d1f2d15d",
-- "appOwnerOrganizationId": "599fd2f6-80be-4f0d-9b03-b3e74fdcf211",
+- "appOwnerOrganizationId": "599fd2f6-...",
 
 ## NOTE: the appId is shown in the output as follows
  - "appId": "a3a8cb51-7eb4-47c6-8b1d-f0a5134d1be7",
@@ -66,13 +66,13 @@ az role assignment create \
 ## Output  
     {
     ...
-    "id": "/subscriptions/8f45e7ec-8404-4723-aa20-fc58a7c4c120/resourceGroups/rg-github-actions-terraform/providers/Microsoft.Authorization/roleAssignments/5b18a4f0-390c-402a-a386-f4cea3f40ad9",
+    "id": "/subscriptions/8f45e7ec-.../resourceGroups/rg-github-actions-terraform/providers/Microsoft.Authorization/roleAssignments/5b18a4f0-390c-402a-a386-f4cea3f40ad9",
     "name": "5b18a4f0-390c-402a-a386-f4cea3f40ad9",
     "principalId": "fb56c1a2-cd66-40dc-9937-36f8d1f2d15d",
     "principalType": "ServicePrincipal",
     "resourceGroup": "rg-github-actions-terraform",
-    "roleDefinitionId": "/subscriptions/8f45e7ec-8404-4723-aa20-fc58a7c4c120/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
-    "scope": "/subscriptions/8f45e7ec-8404-4723-aa20-fc58a7c4c120/resourceGroups/rg-github-actions-terraform",
+    "roleDefinitionId": "/subscriptions/8f45e7ec-.../providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
+    "scope": "/subscriptions/8f45e7ec-.../resourceGroups/rg-github-actions-terraform",
     "type": "Microsoft.Authorization/roleAssignments",
     ...
     }
