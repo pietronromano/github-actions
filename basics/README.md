@@ -1,2 +1,4 @@
 # github-actions-basics
-Basic workflow &amp; actions examples
+Basic workflow and actions examples
+
+- See root .github/workflows folder for these examples

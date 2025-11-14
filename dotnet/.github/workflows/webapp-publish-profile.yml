@@ -19,6 +19,8 @@ jobs:
     uses: ./.github/workflows/dotnet-build-cache.yml
 
     # NOTE: env variables CANNOT be passed to the called workflow, so have to use literals
+    # It does not contain variables inherited by the runner process.
+    # https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#env-context
     # https://stackoverflow.com/questions/73305126/passing-environment-variables-as-inputs-to-a-reusable-workflow
     # https://github.com/orgs/community/discussions/26671
     with: 
